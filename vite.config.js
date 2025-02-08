@@ -11,6 +11,8 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
+    cssCodeSplit: false, // Force all CSS into a single file
+    cssMinify: true,
     rollupOptions: {
       input: {
         main: 'index.html',
@@ -28,6 +30,10 @@ export default defineConfig({
         leaderboard: 'leaderboard.html'
       },
       output: {
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.name === 'style.css') return 'assets/styles.[hash].css';
+          return 'assets/[name].[hash][extname]';
+        },
         manualChunks: {
           firebase: ['firebase/app', 'firebase/firestore', 'firebase/database']
         }
