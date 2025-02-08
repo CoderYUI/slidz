@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Puzzle 3 - QRIOSITY</title>
+    <link rel="stylesheet" href="./styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&display=swap" rel="stylesheet">
+    <script type="module" src="./timeSync.js"></script>
+    <style>
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 3000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+            transform: translateY(-50px);
+            opacity: 0;
+            transition: all 0.3s ease-out;
+        }
+
+        .modal.active .modal-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .completed-puzzle {
+            margin: 1rem 0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .completed-puzzle img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin: 1rem 0;
+            font-size: 1.2rem;
+        }
+
+        .countdown-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .countdown {
+            font-family: 'Russo One', sans-serif;
+            font-size: 120px;
+            color: #ffd700;
+            text-shadow: 
+                0 0 20px rgba(255, 215, 0, 0.8),
+                0 0 40px rgba(255, 215, 0, 0.6);
+            animation: countPulse 1s infinite;
+        }
+
+        @keyframes countPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+    </style>
+    <script type="module">
+        import { realtimeDb } from './firebase-config.js';
+        import { ref, onValue } from 'firebase/database';
+
+        // Reset listener
+        document.addEventListener('DOMContentLoaded', () => {
+            const resetRef = ref(realtimeDb, 'systemState/reset');
+            onValue(resetRef, (snapshot) => {
+                const resetData = snapshot.val();
+                if (resetData?.action === 'reset') {
+                    sessionStorage.clear();
+                    window.location.replace('/thankyou.html');
+                }
+            });
+        });
+    </script>
+    <script>
+        // Add this script in the head section
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeIcon = document.getElementById('theme-icon');
+            
+            // Check saved theme
+            if (localStorage.getItem('theme') === 'dark') {
+                document.body.classList.add('dark-theme');
+                themeIcon.setAttribute('name', 'sunny-outline');
+            }
+
+            // Theme toggle
+            themeIcon.addEventListener('click', () => {
+                document.body.classList.toggle('dark-theme');
+                const isDark = document.body.classList.contains('dark-theme');
+                themeIcon.setAttribute('name', isDark ? 'sunny-outline' : 'moon-outline');
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            });
+        });
+    </script>
+</head>
+<body>
+    <!-- Nav section -->
+    <nav>
+        <div class="logo">
+            <img src="/images/logo_light.jpg" alt="Light Logo" class="logo-light" draggable="false">
+            <img src="/images/logo_dark.jpg" alt="Dark Logo" class="logo-dark" draggable="false">
+        </div>
+        <div class="game-title">
+            <span class="title-qr">QR</span><span class="title-iosity">IOSITY</span>
+        </div>
+        <div class="theme-switch">
+            <ion-icon name="moon-outline" id="theme-icon"></ion-icon>
+        </div>
+    </nav>
+
+    <!-- Loading overlay - Add this back -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <p>Loading puzzle...</p>
+    </div>
+
+    <!-- Countdown overlay -->
+    <div id="countdownOverlay" class="countdown-overlay">
+        <div id="countdown" class="countdown">5</div>
+    </div>
+
+    <!-- Main content -->
+    <main class="puzzle-container" id="puzzleContainer">
+        <h1 class="puzzle-title">Solve the Puzzle</h1>
+        
+        <div class="game-info">
+            <div id="timer" class="timer">7:00</div>
+            <div id="moves" class="moves">Moves: 0</div>
+        </div>
+        
+        <div id="board" class="puzzle-board"></div>
+    </main>
+
+    <!-- Modals -->
+    <div id="successModal" class="modal">
+        <div class="modal-content success-modal">
+            <h2>Congratulations!</h2>
+            <div class="stats">
+                <div class="stat-item">Time: <span id="finalTime"></span></div>
+                <div class="stat-item">Moves: <span id="finalMoves"></span></div>
+            </div>
+            <div class="completed-puzzle">
+                <img id="completedImage" src="/images/puzzle.png" alt="Completed Puzzle">
+            </div>
+            <p class="puzzle-quote"></p>
+        </div>
+    </div>
+
+    <div id="timeoutModal" class="modal">
+        <div class="modal-content timeout-modal">
+            <h2>Time's Up!</h2>
+            <div class="stats">
+                <div class="stat-item">Moves: <span id="timeoutMoves"></span></div>
+            </div>
+            <div class="completed-puzzle">
+                <img id="timeoutImage" src="" alt="Completed Puzzle">
+            </div>
+            <p class="puzzle-quote"></p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p class="footer-credit">Made with <span class="heart">❤</span> by VITERA Club</p>
+        </div>
+    </footer>
+
+    <script type="module" src="./script.js"></script>
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+</body>
+</html>
