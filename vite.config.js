@@ -5,52 +5,74 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
-    cssCodeSplit: false,
+    cssCodeSplit: true, // Change to true to generate separate CSS files
     chunkSizeWarningLimit: 600,
     rollupOptions: {
       input: {
         main: '/index.html',
-        script: '/script.js',
         admin: '/admin.html',
-        registration: '/registration.html',
+        leaderboard: '/leaderboard.html',
         lobby: '/lobby.html',
         puzzle1: '/puzzle1.html',
         puzzle2: '/puzzle2.html',
         puzzle3: '/puzzle3.html',
         puzzle4: '/puzzle4.html',
         puzzle5: '/puzzle5.html',
-        waiting: '/waiting.html',
-        waiting_leaderboard: '/waiting_leaderboard.html',
+        registration: '/registration.html',
         thankyou: '/thankyou.html',
-        leaderboard: '/leaderboard.html'
+        waiting_leaderboard: '/waiting_leaderboard.html',
+        waiting: '/waiting.html',
+        // Add CSS entries explicitly
+        styles: '/styles.css',
+        adminStyles: '/admin-styles.css',
+        leaderboardStyles: '/leaderboard.css',
+        lobbyStyles: '/lobby-styles.css',
+        registrationStyles: '/registration.css',
+        thankyouStyles: '/thankyou.css',
+        waitingStyles: '/waiting.css',
+        waitingLeaderboardStyles: '/waiting_leaderboard.css'
       },
       output: {
         manualChunks: (id) => {
-          // Firebase chunks
-          if (id.includes('firebase/app') || 
-              id.includes('firebase/firestore') || 
-              id.includes('firebase/database')) {
+          // Firebase related chunks
+          if (id.includes('firebase')) {
             return 'firebase';
           }
-          // Utils chunks
-          if (id.includes('timeSync') || 
-              id.includes('firebaseConnection') || 
-              id.includes('firebase-config')) {
-            return 'utils';
+
+          // CSS chunks
+          if (id.includes('.css')) {
+            if (id.includes('admin-styles')) return 'admin-styles';
+            if (id.includes('leaderboard')) return 'leaderboard-styles';
+            if (id.includes('lobby-styles')) return 'lobby-styles';
+            if (id.includes('registration')) return 'registration-styles';
+            if (id.includes('thankyou')) return 'thankyou-styles';
+            if (id.includes('waiting')) return 'waiting-styles';
+            return 'styles';
           }
-          // Puzzle chunks
-          if (id.includes('puzzle') && id.endsWith('.js')) {
-            return 'puzzle';
-          }
+
+          // JS chunks
+          if (id.includes('admin.js')) return 'admin';
+          if (id.includes('leaderboard.js')) return 'leaderboard';
+          if (id.includes('lobby.js')) return 'lobby';
+          if (id.includes('registration.js')) return 'registration';
+          if (id.includes('thankyou.js')) return 'thankyou';
+          if (id.includes('waiting')) return 'waiting';
+          if (id.includes('timeSync.js')) return 'utils';
+          if (id.includes('firebase')) return 'firebase-utils';
         },
-        assetFileNames: (assetInfo) => {
-          if (assetInfo.name === 'style.css') {
-            return 'assets/[name].[hash].css';
+        assetFileNames: ({name}) => {
+          // Put CSS files in a dedicated directory
+          if (/\.css$/.test(name)) {
+            return 'assets/css/[name].[hash][extname]';
+          }
+          // Handle other assets
+          if (/\.(gif|jpe?g|png|svg)$/.test(name)) {
+            return 'assets/images/[name].[hash][extname]';
           }
           return 'assets/[name].[hash][extname]';
         },
-        chunkFileNames: 'assets/[name].[hash].js',
-        entryFileNames: 'assets/[name].[hash].js'
+        chunkFileNames: 'assets/js/[name].[hash].js',
+        entryFileNames: 'assets/js/[name].[hash].js'
       }
     },
     minify: 'terser',
@@ -62,7 +84,18 @@ export default defineConfig({
     }
   },
   optimizeDeps: {
-    include: ['firebase/app', 'firebase/firestore', 'firebase/database'],
-    exclude: []
+    include: [
+      'firebase/app',
+      'firebase/firestore',
+      'firebase/database'
+    ]
+  },
+  css: {
+    modules: false,
+    devSourcemap: true,
+    // Ensure CSS is processed
+    postcss: {},
+    // Generate separate CSS files
+    extract: true
   }
 });
