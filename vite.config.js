@@ -1,11 +1,16 @@
+import firebase from 'firebase/compat/app';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: './',
+  base: './', // Makes paths relative for better mobile compatibility
+  server: {
+    port: 3000,
+    host: '0.0.0.0', // Allow external access
+    cors: true // Enable CORS for mobile access
+  },
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
-    cssCodeSplit: false,
     rollupOptions: {
       input: {
         main: 'index.html',
@@ -21,7 +26,15 @@ export default defineConfig({
         waiting_leaderboard: 'waiting_leaderboard.html',
         thankyou: 'thankyou.html',
         leaderboard: 'leaderboard.html'
+      },
+      output: {
+        manualChunks: {
+          firebase: ['firebase/app', 'firebase/firestore', 'firebase/database']
+        }
       }
-    }
-  }
+    },
+    copyPublicDir: true,
+    chunkSizeWarningLimit: 600
+  },
+  publicDir: 'public'
 });
