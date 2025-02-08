@@ -6,15 +6,13 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview",
-    "clean": "rimraf dist node_modules/.vite"
+    "preview": "vite preview"
   },
   "dependencies": {
     "firebase": "^9.0.0"
   },
   "devDependencies": {
-    "vite": "^4.4.9",
-    "rimraf": "^5.0.1"
+    "vite": "^4.4.9"
   },
   "engines": {
     "node": ">=16.0.0"
