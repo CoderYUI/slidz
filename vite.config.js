@@ -2,19 +2,19 @@ import firebase from 'firebase/compat/app';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: './', // Makes paths relative for better mobile compatibility
+  base: '/',
   server: {
     port: 3000,
-    host: '0.0.0.0', // Allow external access
-    cors: true // Enable CORS for mobile access
+    host: '0.0.0.0',
+    cors: true
   },
   build: {
-    outDir: 'dist',
-    assetsDir: 'assets',
+    // Remove outDir configuration
+    assetsDir: '',  // Put assets in root
     rollupOptions: {
       input: {
         main: 'index.html',
-        registration: 'registration.html', // Add this line
+        registration: 'registration.html',
         admin: 'admin.html',
         lobby: 'lobby.html',
         puzzle1: 'puzzle1.html',
