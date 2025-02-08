@@ -4,35 +4,30 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "public": true,
+  "cleanUrls": true,
   "routes": [
-    { 
-      "src": "/assets/(.*)",
-      "dest": "/assets/$1",
-      "headers": { "cache-control": "public, max-age=31536000, immutable" }
+    {
+      "src": "/assets/(.*)\\.(.*)\\.(js|css|map)",
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable"
+      }
     },
-    { 
+    {
       "src": "/images/(.*)",
-      "headers": { "cache-control": "public, max-age=31536000, immutable" },
-      "dest": "/images/$1" 
-    },
-    {
-      "src": "/registration",
-      "dest": "/registration.html"
-    },
-    {
-      "src": "/registration.html",
-      "dest": "/registration.html"
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable"
+      }
     },
     { 
-      "src": "/(.*).js",
-      "dest": "/$1.js"
+      "handle": "filesystem"
     },
-    { 
-      "src": "/(.*).css",
-      "dest": "/$1.css"
-    },
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.html" }
+    {
+      "src": "/(.*)",
+      "dest": "/index.html",
+      "headers": {
+        "cache-control": "public, max-age=0, must-revalidate"
+      }
+    }
   ],
   "env": {
     "VITE_FIREBASE_API_KEY": "AIzaSyAPQR-qVqnzAcFTfx3M1NXe_2q2xk2l1cE",
