@@ -1,9 +1,7 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
-  "outputDirectory": ".",
-  "framework": "vite",
   "public": true,
+  "outputDirectory": ".",
   "routes": [
     { 
       "src": "/images/(.*)",
@@ -13,18 +11,6 @@
     {
       "src": "/registration",
       "dest": "/registration.html"
-    },
-    {
-      "src": "/registration.html",
-      "dest": "/registration.html"
-    },
-    { 
-      "src": "/(.*).js",
-      "dest": "/$1.js"
-    },
-    { 
-      "src": "/(.*).css",
-      "dest": "/$1.css"
     },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/index.html" }

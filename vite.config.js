@@ -9,8 +9,8 @@ export default defineConfig({
     cors: true
   },
   build: {
-    // Remove outDir configuration
-    assetsDir: '',  // Put assets in root
+    outDir: 'dist',  // Restore this
+    assetsDir: 'assets',  // Restore this
     rollupOptions: {
       input: {
         main: 'index.html',
