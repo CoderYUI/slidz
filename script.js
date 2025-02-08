@@ -637,15 +637,15 @@ class SlidingPuzzle {
                     const col = (num - 1) % this.cols;
                     tile.style.backgroundImage = `url(${this.imagePath})`;
                     tile.style.backgroundPosition = `-${col * 100}px -${row * 100}px`;
-                    tile.style.cursor = 'pointer';
                 }
+                
+                // Add direct click handler to each tile
+                tile.addEventListener('click', (e) => {
+                    if (!this.gameStarted || num === 0) return;
+                    e.preventDefault();
+                    this.moveTile(tile);
+                }, { passive: false });
             }
-            
-            // Add click event to each tile
-            tile.addEventListener('click', () => {
-                if (!this.gameStarted || num === 0) return;
-                this.moveTile(tile);
-            });
             
             this.board.appendChild(tile);
         });
@@ -765,45 +765,66 @@ class SlidingPuzzle {
     }
 
     setupEventListeners() {
-        // Clean up existing listeners
-        const oldBoard = this.board;
-        const newBoard = oldBoard.cloneNode(true);
-        oldBoard.parentNode.replaceChild(newBoard, oldBoard);
-        this.board = newBoard;
+        // Remove existing board clone approach which might be causing issues
+        if (!this.board) return;
 
-        // Initialize touch tracking variables with simpler state
+        // Clean up existing listeners first
+        this.board.removeEventListener('touchstart', this.handleTouchStart);
+        this.board.removeEventListener('touchmove', this.handleTouchMove);
+        this.board.removeEventListener('touchend', this.handleTouchEnd);
+        this.board.removeEventListener('click', this.handleClick);
+
+        // Bind event handlers to maintain context
+        this.handleTouchStart = this.handleTouchStart.bind(this);
+        this.handleTouchMove = this.handleTouchMove.bind(this);
+        this.handleTouchEnd = this.handleTouchEnd.bind(this);
+        this.handleClick = this.handleClick.bind(this);
+
+        // Add new event listeners with proper options
+        this.board.addEventListener('touchstart', this.handleTouchStart, { passive: false });
+        this.board.addEventListener('touchmove', this.handleTouchMove, { passive: false });
+        this.board.addEventListener('touchend', this.handleTouchEnd, { passive: false });
+        this.board.addEventListener('click', this.handleClick);
+
+        // Prevent default touch behavior on the board
+        this.board.style.touchAction = 'none';
+        this.board.style.userSelect = 'none';
+        this.board.style.webkitUserSelect = 'none';
+
+        // Initialize touch state
         this.touchState = {
             startX: null,
             startY: null,
-            tile: null
+            tile: null,
+            moving: false
         };
+    }
 
-        // Add touch and click event listeners
-        this.board.addEventListener('touchstart', (e) => this.handleTouchStart(e), { passive: true });
-        this.board.addEventListener('touchmove', (e) => this.handleTouchMove(e), { passive: true });
-        this.board.addEventListener('touchend', (e) => this.handleTouchEnd(e), { passive: true });
+    handleClick(e) {
+        if (!this.gameStarted) return;
         
-        // Add click handler for non-touch devices
-        this.board.addEventListener('click', (e) => {
-            const tile = e.target.closest('.tile');
-            if (tile && !tile.classList.contains('empty')) {
-                this.moveTile(tile);
-            }
-        });
+        const tile = e.target.closest('.tile');
+        if (tile && !tile.classList.contains('empty') && !this.touchState.moving) {
+            e.preventDefault();
+            this.moveTile(tile);
+        }
     }
 
     handleTouchStart(e) {
         if (!this.gameStarted) return;
         
+        e.preventDefault();
         const touch = e.touches[0];
-        const tile = document.elementFromPoint(touch.clientX, touch.clientY).closest('.tile');
+        const tile = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.tile');
         
         if (tile && !tile.classList.contains('empty')) {
             this.touchState = {
                 startX: touch.clientX,
                 startY: touch.clientY,
-                tile: tile
+                tile: tile,
+                moving: false
             };
+            
             tile.classList.add('touching');
         }
     }
@@ -811,12 +832,13 @@ class SlidingPuzzle {
     handleTouchMove(e) {
         if (!this.touchState.tile) return;
         
+        e.preventDefault();
         const touch = e.touches[0];
         const deltaX = touch.clientX - this.touchState.startX;
         const deltaY = touch.clientY - this.touchState.startY;
         
-        // Simple visual feedback
-        if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
+        if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
+            this.touchState.moving = true;
             this.touchState.tile.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
         }
     }
@@ -824,28 +846,15 @@ class SlidingPuzzle {
     handleTouchEnd(e) {
         if (!this.touchState.tile) return;
         
+        e.preventDefault();
         const tile = this.touchState.tile;
-        const touch = e.changedTouches[0];
-        const deltaX = touch.clientX - this.touchState.startX;
-        const deltaY = touch.clientY - this.touchState.startY;
-        const threshold = 30; // Minimum swipe distance
         
         // Reset tile appearance
         tile.classList.remove('touching');
         tile.style.transform = '';
         
-        // Handle swipe if it exceeds threshold
-        if (Math.abs(deltaX) > threshold || Math.abs(deltaY) > threshold) {
-            // Move based on primary direction
-            if (Math.abs(deltaX) > Math.abs(deltaY)) {
-                // Horizontal swipe
-                this.moveTile(tile);
-            } else {
-                // Vertical swipe
-                this.moveTile(tile);
-            }
-        } else {
-            // Handle as click if swipe was too small
+        // Only trigger move if it wasn't a significant drag
+        if (!this.touchState.moving) {
             this.moveTile(tile);
         }
         
@@ -853,7 +862,8 @@ class SlidingPuzzle {
         this.touchState = {
             startX: null,
             startY: null,
-            tile: null
+            tile: null,
+            moving: false
         };
     }
 
